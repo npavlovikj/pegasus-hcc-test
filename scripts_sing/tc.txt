@@ -1,0 +1,101 @@
+#!/bin/bash
+
+# image comes from Singularity Hub
+# URL to image in a docker hub or a url to an existing
+# singularity image file
+cont salmonella_ice {
+    type "singularity"
+#    image "docker://npavlovikj/bacteria_db:latest"
+    image "https://unl.box.com/shared/static/5498qb7ygco4f94h35kzh0g83ydh9wbr.sif"
+}
+
+# All jobs are defined in tc.txt
+# INSTALLED means pfn refers to path in the container.
+# STAGEABLE means the executable can be staged into the container
+tr ex_sra_run {
+    site local-hcc {
+        type "INSTALLED"
+        container "salmonella_ice"
+        pfn "file:///opt/anaconda/bin/fastq-dump"
+    }
+}
+
+tr ex_trim_run {
+    site local-hcc {
+        type "INSTALLED"
+        container "salmonella_ice"
+        pfn "/opt/anaconda/bin/java"
+    }
+}
+
+tr ex_fastqc_run {
+    site local-hcc {
+        type "INSTALLED"
+        container "salmonella_ice"
+        pfn "/opt/anaconda/bin/perl"
+    }
+}
+
+tr ex_fastqc_fail_run {
+    site local {
+        type "STAGEABLE"
+        container "salmonella_ice"
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/fastqc_fail.sh"
+    }
+}
+
+tr ex_spades_run {
+    site local-hcc {
+        type "INSTALLED"
+        container "salmonella_ice"
+        pfn "/opt/anaconda/bin/spades.py"
+    }
+}
+
+tr ex_quast_run {
+    site local-hcc {
+        type "INSTALLED"
+        container "salmonella_ice"
+        pfn "/opt/anaconda/bin/quast"
+    }
+}
+
+tr ex_filtering_run {
+    site local {
+        type "STAGEABLE"
+        container "salmonella_ice"
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/filtering.sh"
+    }
+}
+
+tr ex_prokka_run {
+    site local-hcc {
+        type "INSTALLED"
+        container "salmonella_ice"
+        pfn "/opt/anaconda/bin/prokka"
+    }
+}
+
+tr ex_roary_run {
+    site local-hcc {
+        type "INSTALLED"
+        container "salmonella_ice"
+        pfn "/opt/anaconda/bin/roary"
+    }
+}
+
+tr cat {
+    site local-hcc {
+        type "STAGEABLE"
+        container "salmonella_ice"
+        pfn "/bin/cat"
+    }
+}
+
+tr ex_generate {
+    site local {
+        type "STAGEABLE"
+        container "salmonella_ice"
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/sub-dax.py"
+    }
+}

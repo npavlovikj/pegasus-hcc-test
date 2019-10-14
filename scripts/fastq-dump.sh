@@ -1,0 +1,10 @@
+#!/bin/bash
+
+. /util/opt/lmod/lmod/init/profile
+export -f module
+module use /util/opt/hcc-modules/Common/
+
+module load SRAtoolkit/2.10
+
+fastq-dump "$@"
+# fastq-dump --split-files $SRRID

@@ -1,0 +1,103 @@
+#!/bin/bash
+
+tr ex_sra_run {
+    site local-hcc {
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/fastq-dump.sh"
+    }
+}
+
+tr ex_trim_run {
+    site local-hcc {
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/trim.sh"
+    }
+}
+
+tr ex_fastqc_run {
+    site local-hcc {
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/fastqc.sh"
+    }
+}
+
+tr ex_fastqc_fail_run {
+    site local-hcc {
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/fastqc_fail.sh"
+    }
+}
+
+tr ex_spades_run {
+    site local-hcc {
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/spades.sh"
+    }
+}
+
+tr ex_quast_run {
+    site local-hcc {
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/quast.sh"
+    }
+}
+
+tr ex_filtering_run {
+    site local-hcc {
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/filtering.sh"
+    }
+}
+
+tr ex_sistr_run {
+    site local-hcc {
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/sistr.sh"
+    }
+}
+
+tr ex_mlst_run {
+    site local-hcc {
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/mlst.sh"
+    }
+}
+
+tr ex_plasmidfinder_run {
+    site local-hcc {
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/plasmidfinder.sh"
+    }
+}
+
+tr ex_abricate_run {
+    site local-hcc {
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/abricate.sh"
+    }
+}
+
+tr ex_prokka_run {
+    site local-hcc {
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/prokka.sh"
+    }
+}
+
+tr ex_roary_run {
+    site local-hcc {
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/roary.sh"
+    }
+}
+
+tr ex_baps_run {
+    site local-hcc {
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/baps.sh"
+    }
+}
+
+tr ex_cat {
+    site local-hcc {
+        pfn "/bin/cat"
+    }
+}
+
+tr ex_ls {
+    site local-hcc {
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/scripts/ls.sh"
+    }
+}
+
+tr ex_generate {
+    site local {
+        pfn "file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/sub-dax.py"
+    }
+}
