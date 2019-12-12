@@ -14,7 +14,7 @@ from Pegasus.DAX3 import *
 dax = ADAG("pipeline")
 base_dir = os.getcwd()
 
-run_dir = "/work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/data_tmp"
+run_dir = "/work/deogun/npavlovikj/FFH/pegasus-hcc-test/data_tmp"
 
 prokka_run = []
 plasmidfinder_run = []
@@ -65,24 +65,26 @@ for output_filtering_contigs in list_of_contig_files:
 # add job for sistr
 # only ... should be transferred
 # sistr --qc -vv --alleles-output allele_results.json --novel-alleles novel_alleles.fasta --cgmlst-profiles cgmlst_profiles.csv -f csv -o sistr_output.csv *.fasta
-sistr_run = Job("ex_sistr_run")
-sistr_run.addArguments("--qc", "-vv", "--alleles-output", "allele_results.json", "--novel-alleles", "novel_alleles.fasta", "--cgmlst-profiles", "cgmlst_profiles.csv", "-f", "csv", "-o", "sistr_output.csv", *list_of_contig_files)
-for l in list_of_contig_files:
-    sistr_run.uses(l, link=Link.INPUT)
-sistr_run.uses("sistr_output.csv", link=Link.OUTPUT, transfer=True)
+#sistr_run = Job("ex_sistr_run")
+#sistr_run.addArguments("--qc", "-vv", "--alleles-output", "allele_results.json", "--novel-alleles", "novel_alleles.fasta", "--cgmlst-profiles", "cgmlst_profiles.csv", "-f", "csv", "-o", "sistr_output.csv", *list_of_contig_files)
+#for l in list_of_contig_files:
+#    sistr_run.uses(l, link=Link.INPUT)
+#sistr_run.uses("sistr_output.csv", link=Link.OUTPUT, transfer=True)
 #sistr_run.addProfile(Profile("pegasus", "label", str(srr_id)))
-dax.addJob(sistr_run)
+#dax.addJob(sistr_run)
 
 # add job for mlst
 # only ... should be transferred
 # mlst --legacy --scheme senterica *.fa --csv > salmonellast_output.csv
 mlst_run = Job("ex_mlst_run")
-mlst_run.addArguments("--legacy", "--scheme", "senterica", "--csv", *list_of_contig_files)
+mlst_run.addArguments("--legacy", "--scheme", "suberis", "--csv", *list_of_contig_files)
 for l in list_of_contig_files:
     mlst_run.uses(l, link=Link.INPUT)
-o = File("salmonellast_output.csv")
+o = File("mlst_output.csv")
 mlst_run.setStdout(o)
 mlst_run.uses(o, link=Link.OUTPUT, transfer=True)
+mlst_run.addProfile(Profile("pegasus", "runtime", "108000"))
+mlst_run.addProfile(Profile("globus", "maxwalltime", "1800"))
 #mlst_run.addProfile(Profile("pegasus", "label", str(srr_id)))
 dax.addJob(mlst_run)
 
@@ -166,29 +168,31 @@ dax.addJob(abricate_resfinder_run)
 
 # add job for Roary
 roary_run = Job("ex_roary_run")
-roary_run.addArguments("-e", "--mafft", "-p", "12", "-cd", "99.0", "-i", "95", "-f", "roary_output", *list_of_gff_files)
+roary_run.addArguments("-s", "-e", "--mafft", "-p", "4", "-cd", "99.0", "-i", "95", "-f", "roary_output", *list_of_gff_files)
 for l in list_of_gff_files:
     roary_run.uses(l, link=Link.INPUT)
 roary_run.uses("roary_output/core_gene_alignment.aln", link=Link.OUTPUT, transfer=True)
 roary_run.uses("roary_output.tar.gz", link=Link.OUTPUT, transfer=True)
-roary_run.addProfile(Profile("pegasus", "runtime", "36000"))
-roary_run.addProfile(Profile("globus", "maxwalltime", "600"))
-roary_run.addProfile(Profile("condor", "request_memory", "900000"))
-roary_run.addProfile(Profile("condor", "memory", "900000"))
+roary_run.addProfile(Profile("pegasus", "runtime", "108000"))
+roary_run.addProfile(Profile("globus", "maxwalltime", "1800"))
+roary_run.addProfile(Profile("condor", "request_memory", "150000"))
+roary_run.addProfile(Profile("globus", "maxmemory", "150000"))
+roary_run.addProfile(Profile("pegasus", "memory", "150000"))
 #roary_run.addProfile(Profile("pegasus", "label", str(srr_id)))
 dax.addJob(roary_run)
 
 # add job for baps_run
 # R script, wrapper
-baps_run = Job("ex_baps_run")
-baps_run.addArguments("roary_output/core_gene_alignment.aln", "hierbaps_partition.csv")
-baps_run.uses("roary_output/core_gene_alignment.aln", link=Link.INPUT)
-baps_run.uses("hierbaps_partition.csv", link=Link.OUTPUT, transfer=True)
-baps_run.addProfile(Profile("condor", "request_memory", "900000"))
-baps_run.addProfile(Profile("condor", "memory", "900000"))
+fastbaps_run = Job("ex_fastbaps_run")
+fastbaps_output = File("fastbaps_baps.csv")
+fastbaps_run.addArguments("roary_output/core_gene_alignment.aln", fastbaps_output)
+fastbaps_run.uses("roary_output/core_gene_alignment.aln", link=Link.INPUT)
+fastbaps_run.uses(fastbaps_output, link=Link.OUTPUT, transfer=True)
+fastbaps_run.addProfile(Profile("condor", "request_memory", "30000"))
+fastbaps_run.addProfile(Profile("globus", "maxmemory", "30000"))
+fastbaps_run.addProfile(Profile("pegasus", "memory", "30000"))
 #baps_run.addProfile(Profile("pegasus", "label", str(srr_id)))
-dax.addJob(baps_run)
-
+dax.addJob(fastbaps_run)
 
 # ls
 ls_run = Job("ex_ls")
@@ -202,7 +206,6 @@ for i in range(0,length):
     dax.addDependency(Dependency(parent=plasmidfinder_run[i], child=ls_run))
     dax.addDependency(Dependency(parent=quast_run[i], child=prokka_run[i]))
     dax.addDependency(Dependency(parent=prokka_run[i], child=roary_run))
-dax.addDependency(Dependency(parent=sistr_run, child=ls_run))
 dax.addDependency(Dependency(parent=mlst_run, child=ls_run))
 dax.addDependency(Dependency(parent=abricate_argannot_run, child=ls_run))
 dax.addDependency(Dependency(parent=abricate_card_run, child=ls_run))
@@ -210,7 +213,7 @@ dax.addDependency(Dependency(parent=abricate_ncbi_run, child=ls_run))
 dax.addDependency(Dependency(parent=abricate_plasmidfinder_run, child=ls_run))
 dax.addDependency(Dependency(parent=abricate_resfinder_run, child=ls_run))
 dax.addDependency(Dependency(parent=abricate_vfdb_run, child=ls_run))
-dax.addDependency(Dependency(parent=roary_run, child=baps_run))
+dax.addDependency(Dependency(parent=roary_run, child=fastbaps_run))
 
 
 # Write the DAX to stdout

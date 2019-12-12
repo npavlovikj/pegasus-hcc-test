@@ -7,6 +7,16 @@ export PYTHONPATH=`pegasus-config --python`
 TOPDIR=`pwd`
 
 
+# build a replica catalog, using the data we already transferred
+echo "Finding existing data under /work/deogun/npavlovikj/FFH/pegasus-streptococcus-uberis-hcc/input_data ..."
+rm -f rc-generated.txt
+cp rc-base.txt rc-generated.txt
+for ENTRY in `find /work/deogun/npavlovikj/FFH/pegasus-hcc-test/input_data -name \*.fastq`; do
+    LFN=`basename $ENTRY`
+    PFN=`echo "$ENTRY"`
+    echo "$LFN  $PFN  site=\"local\"" >>rc-generated.txt
+done
+
 # Comment out for root-dax.py
 export RUN_DIR=$TOPDIR/data_tmp
 mkdir -p $RUN_DIR
@@ -37,7 +47,7 @@ cat > sites.xml <<EOF
         <profile namespace="condor" key="grid_resource">batch slurm</profile>
         <profile namespace="pegasus" key="queue">batch,tmp_anvil</profile>
         <profile namespace="env" key="PEGASUS_HOME">/usr</profile>
-        <profile namespace="condor" key="request_memory"> ifthenelse(isundefined(DAGNodeRetry) || DAGNodeRetry == 2000, 4000, 6000) </profile>
+        <profile namespace="condor" key="request_memory"> ifthenelse(isundefined(DAGNodeRetry) || DAGNodeRetry == 0, 2000, 60000) </profile>
     </site>
 
 </sitecatalog>

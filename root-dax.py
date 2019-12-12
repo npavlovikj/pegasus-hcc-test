@@ -27,9 +27,9 @@ list_of_contig_files = []
 list_of_filtererd_sra_ids = []
 
 # Open input list and count files
-input_file = open("typhimurium_sra_ids.txt")
+input_file = open("sra_ids.txt")
 lines = input_file.readlines()
-input_file = open("typhimurium_sra_ids.txt")
+input_file = open("sra_ids.txt")
 length = len(input_file.readlines())
 
 # Add file executable and job for sub-pipeline
@@ -61,19 +61,19 @@ for i in range(0,length):
     dax.addFile(reverse_file[i])
 
     # add job for downloading data
-    sra_run.append(Job("ex_sra_run"))
-    sra_run[i].addArguments("--split-files", str(srr_id))
-    sra_run[i].uses(forward_file[i], link=Link.OUTPUT, transfer=False)
-    sra_run[i].uses(reverse_file[i], link=Link.OUTPUT, transfer=False)
+#    sra_run.append(Job("ex_sra_run"))
+#    sra_run[i].addArguments("--split-files", str(srr_id))
+#    sra_run[i].uses(forward_file[i], link=Link.OUTPUT, transfer=False)
+#    sra_run[i].uses(reverse_file[i], link=Link.OUTPUT, transfer=False)
     # add profile for download limit
     # Profile(PROPERTY_KEY[0], PROFILE KEY, PROPERTY_KEY[1])
-    sra_run[i].addProfile(Profile("dagman", "CATEGORY", "sradownload"))
-    sra_run[i].addProfile(Profile("pegasus", "label", str(srr_id)))
-    dax.addJob(sra_run[i])
+#    sra_run[i].addProfile(Profile("dagman", "CATEGORY", "sradownload"))
+#    sra_run[i].addProfile(Profile("pegasus", "label", str(srr_id)))
+#    dax.addJob(sra_run[i])
      
     # add job for Trimmomatic
     trim_run.append(Job("ex_trim_run"))
-    trim_run[i].addArguments("PE", "-threads", "1", forward_file[i].name, reverse_file[i].name, str(srr_id) + "_pair_1_trimmed.fastq", str(srr_id) + "_unpair_1_trimmed.fastq", str(srr_id) + "_pair_2_trimmed.fastq", str(srr_id) + "_unpair_2_trimmed.fastq", "HEADCROP:15", "CROP:215", "LEADING:10", "TRAILING:10", "SLIDINGWINDOW:5:20", "MINLEN:50")
+    trim_run[i].addArguments("PE", "-threads", "1", forward_file[i].name, reverse_file[i].name, str(srr_id) + "_pair_1_trimmed.fastq", str(srr_id) + "_unpair_1_trimmed.fastq", str(srr_id) + "_pair_2_trimmed.fastq", str(srr_id) + "_unpair_2_trimmed.fastq", "HEADCROP:15", "CROP:200", "LEADING:10", "TRAILING:10", "SLIDINGWINDOW:5:20", "MINLEN:50")
     trim_run[i].uses(forward_file[i], link=Link.INPUT)
     trim_run[i].uses(reverse_file[i], link=Link.INPUT)
     trim_run[i].uses(str(srr_id) + "_pair_1_trimmed.fastq", link=Link.OUTPUT, transfer=False)
@@ -104,8 +104,8 @@ for i in range(0,length):
     spades_run[i].uses(str(srr_id) + "_pair_1_trimmed.fastq", link=Link.INPUT)
     spades_run[i].uses(str(srr_id) + "_pair_2_trimmed.fastq", link=Link.INPUT)
     spades_run[i].uses(str(srr_id) + "_spades_output/contigs.fasta", link=Link.OUTPUT)
-    spades_run[i].addProfile(Profile("pegasus", "runtime", "10800"))
-    spades_run[i].addProfile(Profile("globus", "maxwalltime", "180"))
+    spades_run[i].addProfile(Profile("pegasus", "runtime", "3600"))
+    spades_run[i].addProfile(Profile("globus", "maxwalltime", "600"))
     spades_run[i].addProfile(Profile("pegasus", "label", str(srr_id)))
     dax.addJob(spades_run[i])
 
@@ -161,11 +161,11 @@ fastqc_fail_run.uses(output_fastqc_fail, link=Link.OUTPUT, transfer=True)
 dax.addJob(fastqc_fail_run)
 
 
-input_file = open("typhimurium_sra_ids.txt")
+input_file = open("sra_ids.txt")
 length = len(input_file.readlines())
 for i in range(0,length):
     # Add control-flow dependencies
-    dax.addDependency(Dependency(parent=sra_run[i], child=trim_run[i]))
+#    dax.addDependency(Dependency(parent=sra_run[i], child=trim_run[i]))
     dax.addDependency(Dependency(parent=trim_run[i], child=fastqc_run[i]))
     dax.addDependency(Dependency(parent=fastqc_run[i], child=cat))
     dax.addDependency(Dependency(parent=trim_run[i], child=spades_run[i]))
