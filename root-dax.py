@@ -26,6 +26,7 @@ list_of_gff_files = []
 list_of_contig_files = []
 list_of_filtererd_sra_ids = []
 
+
 # Open input list and count files
 input_file = open("sra_ids.txt")
 lines = input_file.readlines()
@@ -34,23 +35,24 @@ length = len(input_file.readlines())
 
 # Add file executable and job for sub-pipeline
 c = File("sub-pipeline.dax")
-#c.addPFN(PFN("file://"+os.getcwd()+"/sub-pipeline.dax","local-hcc"))
-#dax.addFile(c)
+
 
 # Add a job to analyze the output of split and generate a sub dax with correct number of parallelism based on output of previous job
 generate = Job("ex_generate")
 generate.addArguments(run_dir)
 generate.setStdout("sub-pipeline.dax")
 generate.addProfile(Profile(namespace="env",key="PYTHONPATH",value=os.environ['PYTHONPATH']))
+generate.addProfile(Profile(namespace="hints",key="execution.site",value="local"))
 generate.uses(c, link=Link.OUTPUT)
 dax.addJob(generate)
 
 # Add a subdax job of type DAX that takes the runtime generated sub dax file in the previous step and runs the computation.
 sub_dax = DAX(c)
-sub_dax.addArguments("--output-site local-hcc","--basename sub-pipeline")
+sub_dax.addArguments("--sites local-hcc","--output-site local-hcc","--basename sub-pipeline")
 dax.addJob(sub_dax)
 
 
+# Start analysis
 for i in range(0,length):
 
     srr_id = lines[i].strip()
@@ -61,15 +63,15 @@ for i in range(0,length):
     dax.addFile(reverse_file[i])
 
     # add job for downloading data
-#    sra_run.append(Job("ex_sra_run"))
-#    sra_run[i].addArguments("--split-files", str(srr_id))
-#    sra_run[i].uses(forward_file[i], link=Link.OUTPUT, transfer=False)
-#    sra_run[i].uses(reverse_file[i], link=Link.OUTPUT, transfer=False)
+    sra_run.append(Job("ex_sra_run"))
+    sra_run[i].addArguments(str(srr_id))
+    sra_run[i].uses(forward_file[i], link=Link.OUTPUT, transfer=False)
+    sra_run[i].uses(reverse_file[i], link=Link.OUTPUT, transfer=False)
     # add profile for download limit
     # Profile(PROPERTY_KEY[0], PROFILE KEY, PROPERTY_KEY[1])
-#    sra_run[i].addProfile(Profile("dagman", "CATEGORY", "sradownload"))
-#    sra_run[i].addProfile(Profile("pegasus", "label", str(srr_id)))
-#    dax.addJob(sra_run[i])
+    sra_run[i].addProfile(Profile("dagman", "CATEGORY", "sradownload"))
+    # sra_run[i].addProfile(Profile("pegasus", "label", str(srr_id)))
+    dax.addJob(sra_run[i])
      
     # add job for Trimmomatic
     trim_run.append(Job("ex_trim_run"))
@@ -80,7 +82,7 @@ for i in range(0,length):
     trim_run[i].uses(str(srr_id) + "_unpair_1_trimmed.fastq", link=Link.OUTPUT, transfer=False)
     trim_run[i].uses(str(srr_id) + "_pair_2_trimmed.fastq", link=Link.OUTPUT, transfer=False)
     trim_run[i].uses(str(srr_id) + "_unpair_2_trimmed.fastq", link=Link.OUTPUT, transfer=False)
-    trim_run[i].addProfile(Profile("pegasus", "label", str(srr_id)))
+    # trim_run[i].addProfile(Profile("pegasus", "label", str(srr_id)))
     dax.addJob(trim_run[i])
 
     # add job for FastQC
@@ -98,15 +100,14 @@ for i in range(0,length):
     list_of_fastqc_files.append(f2)
 
     # add job for Spades
-    # Check for empty input
     spades_run.append(Job("ex_spades_run"))
-    spades_run[i].addArguments("-t", "1", "-1", str(srr_id) + "_pair_1_trimmed.fastq", "-2", str(srr_id) + "_pair_2_trimmed.fastq", "--careful", "--cov-cutoff", "auto", "-o", str(srr_id) + "_spades_output")
+    spades_run[i].addArguments("-t", "1", "-1", str(srr_id) + "_pair_1_trimmed.fastq", "-2", str(srr_id) + "_pair_2_trimmed.fastq", "--careful", "--cov-cutoff", "auto", "-o", str(srr_id) + "_spades_output", "--phred-offset", "33")
     spades_run[i].uses(str(srr_id) + "_pair_1_trimmed.fastq", link=Link.INPUT)
     spades_run[i].uses(str(srr_id) + "_pair_2_trimmed.fastq", link=Link.INPUT)
     spades_run[i].uses(str(srr_id) + "_spades_output/contigs.fasta", link=Link.OUTPUT)
     spades_run[i].addProfile(Profile("pegasus", "runtime", "3600"))
     spades_run[i].addProfile(Profile("globus", "maxwalltime", "600"))
-    spades_run[i].addProfile(Profile("pegasus", "label", str(srr_id)))
+    # spades_run[i].addProfile(Profile("pegasus", "label", str(srr_id)))
     dax.addJob(spades_run[i])
 
     # add job for Quast
@@ -114,29 +115,16 @@ for i in range(0,length):
     quast_run[i].addArguments("--fast", "-o", str(srr_id) + "_quast_output", str(srr_id) + "_spades_output/contigs.fasta")
     quast_run[i].uses(str(srr_id) + "_spades_output/contigs.fasta", link=Link.INPUT)
     quast_run[i].uses(str(srr_id) + "_quast_output/transposed_report.tsv", link=Link.OUTPUT)
-    quast_run[i].addProfile(Profile("pegasus", "label", str(srr_id)))
+    # quast_run[i].addProfile(Profile("pegasus", "label", str(srr_id)))
     dax.addJob(quast_run[i])
 
     # add job for Filterig contigs
-    # return the proper contigs file
-    #ff = File(str(srr_id) + "_contigss.fasta")
-    #f1 = File(str(srr_id) + "_spades_output/contigs.fasta")
-    #ff.addPFN(PFN("file://" + os.path.abspath(str(srr_id) + "_contigss.fasta"),"local-hcc"))
-    #dax.addFile(ff)
     filtering_run.append(Job("ex_filtering_run"))
     filtering_run[i].addArguments(str(srr_id) + "_quast_output/transposed_report.tsv",str(srr_id) + "_spades_output/contigs.fasta", run_dir, str(srr_id))
     filtering_run[i].uses(str(srr_id) + "_quast_output/transposed_report.tsv", link=Link.INPUT)
     filtering_run[i].uses(str(srr_id) + "_spades_output/contigs.fasta", link=Link.INPUT)
-    #filtering_run[i].uses(ff, link=Link.OUTPUT, transfer=False, register=False)
-    filtering_run[i].addProfile(Profile("pegasus", "label", str(srr_id)))
+    # filtering_run[i].addProfile(Profile("pegasus", "label", str(srr_id)))
     dax.addJob(filtering_run[i])
-#    ff = File(str(srr_id) + "_cts.fasta")
-    #ff.addPFN(PFN("file://" + os.path.abspath(str(srr_id) + "_cts.fasta"), "local-hcc"))
-    # add files
-#    list_of_contig_files.append(File(str(srr_id) + "_contigss.fasta"))
-#    dax.addFile(ff)
-
-
 
 # add job for cat FastQC Fail
 ex_cat = Executable(namespace="dax", name="cat", version="4.0", os="linux", arch="x86_64", installed=True)
@@ -147,7 +135,6 @@ cat = Job(namespace="dax", name=ex_cat)
 cat.addArguments(*list_of_fastqc_files)
 for l in list_of_fastqc_files:
     cat.uses(l, link=Link.INPUT)
-#    dax.addFile(l)
 cat.setStdout(output_fastqc_cat)
 cat.uses(output_fastqc_cat, link=Link.OUTPUT, transfer=True, register=False)
 dax.addJob(cat)
@@ -165,7 +152,7 @@ input_file = open("sra_ids.txt")
 length = len(input_file.readlines())
 for i in range(0,length):
     # Add control-flow dependencies
-#    dax.addDependency(Dependency(parent=sra_run[i], child=trim_run[i]))
+    dax.addDependency(Dependency(parent=sra_run[i], child=trim_run[i]))
     dax.addDependency(Dependency(parent=trim_run[i], child=fastqc_run[i]))
     dax.addDependency(Dependency(parent=fastqc_run[i], child=cat))
     dax.addDependency(Dependency(parent=trim_run[i], child=spades_run[i]))

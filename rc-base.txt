@@ -1,2 +1,0 @@
-# file-based replica catalog: 2019-10-14T04:48:23.376-05:00
-sra_ids.txt file:///work/deogun/npavlovikj/FFH/pegasus-hcc-test/sra_ids.txt site="local"
