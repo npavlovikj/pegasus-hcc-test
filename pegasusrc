@@ -5,13 +5,16 @@ pegasus.catalog.site.file = sites.xml
 pegasus.dir.useTimestamp = true
 pegasus.dir.storage.deep = false
 pegasus.condor.logs.symlink = false
-#pegasus.dir.storage.mapper = Flat
+# pegasus.dir.storage.mapper = Flat
+
+# use already downloaded files
+# pegasus.transfer.links=True
 
 pegasus.catalog.transformation=Text
 pegasus.catalog.transformation.file=tc.txt
 
 pegasus.catalog.replica=File
-pegasus.catalog.replica.file=rc-generated.txt
+pegasus.catalog.replica.file=rc.txt
 
 # OSG
 # pegasus.data.configuration = nonsharedfs
@@ -22,4 +25,4 @@ pegasus.data.configuration = sharedfs
 dagman.retry = 3
 
 # set limit for SRA download at the time
-# dagman.sradownload.maxjobs = 50
+dagman.sradownload.maxjobs = 50

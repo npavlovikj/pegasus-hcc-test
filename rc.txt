@@ -1,2 +1,1 @@
-# file-based replica catalog: 2019-10-14T04:48:23.376-05:00
-typhimurium_sra_ids.txt file:///work/deogun/npavlovikj/FFH/pegasus-salmonella-hcc-test/typhimurium_sra_ids.txt site="local"
+sra_ids.txt file:///BacGenPop/sra_ids.txt site="local"

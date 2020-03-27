@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Load HCC modules
 . /util/opt/lmod/lmod/init/profile
 export -f module
 module use /util/opt/hcc-modules/Common/
@@ -10,7 +11,7 @@ file=$1
 output=$2
 
 cat > fastbaps.R <<EOF
-#Load library
+# Load library
 library("fastbaps")
 args = commandArgs(trailingOnly=TRUE)
 
